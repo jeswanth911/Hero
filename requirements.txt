@@ -1,0 +1,29 @@
+fastapi==0.110.0
+uvicorn[standard]==0.29.0
+sqlalchemy==2.0.30
+pandas==2.2.2
+numpy==1.26.4
+scikit-learn==1.5.0
+statsmodels==0.14.2
+prophet==1.1.5
+pydantic==2.7.3
+pytest==8.2.2
+pytest-cov==5.0.0
+httpx==0.27.0
+loguru==0.7.2
+psycopg2-binary==2.9.9
+python-dotenv==1.0.1
+redis==5.0.4
+gunicorn==22.0.0
+requests==2.32.3
+# sqlite3 is part of Python stdlib, no pip install needed
+# For monitoring (Prometheus-compatible)
+prometheus-client==0.20.0
+# Optional for Excel/Parquet support
+openpyxl==3.1.2
+pyarrow==16.1.0
+# For PDF/DB dump handling (if necessary)
+tabula-py==2.9.0
+sqlparse==0.5.0
+# For NLP summarization (optional, can remove if not needed)
+transformers==4.41.2
