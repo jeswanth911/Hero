@@ -3,6 +3,7 @@ uvicorn[standard]==0.29.0
 sqlalchemy==2.0.30
 pandas==2.2.2
 numpy==1.26.4
+fastapi-limiter
 scikit-learn==1.5.0
 statsmodels==0.14.2
 prophet==1.1.5
