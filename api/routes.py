@@ -13,9 +13,10 @@ import io
 import uvicorn
 import asyncio
 import logging
+import redis.asyncio as redis
+redis_client = redis.from_url("redis://localhost", encoding="utf8", decode_responses=True)
 
-# Example: Use Redis for rate limiting (setup not shown in this file)
-import aioredis
+
 
 # ========== Application & Middleware Setup ==========
 
@@ -293,6 +294,11 @@ async def http_exception_handler(request, exc):
         content={"detail": exc.detail}
     )
 
+
+@app.on_event("startup")
+async def startup():
+    await FastAPILimiter.init(redis_client)
+    
 # ========== Run Uvicorn (for local dev) ==========
 
 if __name__ == "__main__":
