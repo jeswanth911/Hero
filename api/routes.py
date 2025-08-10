@@ -248,14 +248,3 @@ async def sql_query(query_req: QueryRequest, page: int = Query(1, ge=1), size: i
     items = df.iloc[start:end].to_dict(orient="records")
     return PaginatedResponse(items=items, total=total, page=page, size=size)
 
-
-# ---------- Exception handlers ----------
-@router.exception_handler(ValidationError)
-async def validation_exception_handler(request, exc: ValidationError):
-    return JSONResponse(status_code=422, content={"detail": exc.errors()})
-
-
-@router.exception_handler(HTTPException)
-async def http_exception_handler(request, exc: HTTPException):
-    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
-                                      
