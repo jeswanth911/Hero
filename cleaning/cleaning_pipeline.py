@@ -1,5 +1,9 @@
 import pandas as pd
 import logging
+import pandas as pd
+from .duplicate_handler import remove_duplicates
+from .missing_value_imputer import fill_missing
+from .schema_normalizer import normalize_schema
 from typing import Callable, Dict, List, Optional, Any, Tuple
 
 class PipelineStepError(Exception):
@@ -267,3 +271,35 @@ class DataCleaningPipeline:
             A list of step names.
         """
         return list(self._builtin_steps.keys()) + list(self.custom_steps.keys())
+
+
+
+
+
+
+def run_cleaning(file_path, drop_duplicates=False, fillna=None, columns=None):
+    # Read file
+    if file_path.endswith(".csv"):
+        df = pd.read_csv(file_path)
+    elif file_path.endswith(".xlsx"):
+        df = pd.read_excel(file_path)
+    else:
+        raise ValueError("Unsupported file type")
+
+    # Optional select columns
+    if columns:
+        df = df[columns]
+
+    # Drop duplicates
+    if drop_duplicates:
+        df = remove_duplicates(df)
+
+    # Fill missing values
+    if fillna:
+        df = fill_missing(df, strategy=fillna)
+
+    # Normalize schema for DB compatibility
+    df = normalize_schema(df)
+
+    return df
+    
