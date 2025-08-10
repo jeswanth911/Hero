@@ -84,6 +84,23 @@ class APIError(DataPipelineError):
     ):
         super().__init__(message, code, context)
 
+class UnsupportedFileTypeError(Exception):
+    """Raised when the file type is not supported for ingestion."""
+    def __init__(self, message="Unsupported file type."):
+        super().__init__(message)
+
+
+class FileParsingError(Exception):
+    """Raised when a file cannot be parsed into a DataFrame."""
+    def __init__(self, message="Error parsing file."):
+        super().__init__(message)
+        
+
+
+
+
+
+
 # --- Usage Patterns and Best Practices ---
 """
 - Always raise a specific exception type (not just DataPipelineError) for clarity.
@@ -98,3 +115,5 @@ Example:
         logger.error(e)
         return JSONResponse(e.serialize(), status_code=400)
 """
+
+
