@@ -15,6 +15,12 @@ import pandas as pd
 import io
 import os
 
+from ingestion.ingestion_service import parse_files
+
+
+    
+
+
 # Local imports from your package
 # from ingestion.parsers import parse_xxx   <-- later replace local parsing with ingestion module
 # from query_engine.query_executor import QueryExecutor
@@ -124,16 +130,22 @@ def sanitize_sql(sql: str) -> str:
 # ---------- Endpoints ----------
 @router.post(
     "/ingest",
-    response_model=IngestionResponse,
+    response_model=List[IngestionResponse],
     responses={400: {"model": ErrorResponse}},
     dependencies=[Depends(RateLimiter(times=5, seconds=60))],
 )
-async def ingest_file(file: UploadFile = File(...), user: str = Depends(get_current_user)):
-    """Ingest a file and return preview/columns. For heavy ingestion move to background job."""
-    df = await parse_uploaded_file(file)
-    preview = df.head(10).to_dict(orient="records")
-    return IngestionResponse(message="File ingested successfully.", columns=list(df.columns), preview=preview)
-
+async def ingest_file(files: List[UploadFile] = File(...), user: str = Depends(get_current_user)):
+    parsed_files = await parse_files(files)
+    results = []
+    for filename, df in parsed_files:
+        preview = df.head(10).to_dict(orient="records")
+        results.append(IngestionResponse(
+            message=f"{filename} ingested successfully.",
+            columns=list(df.columns),
+            preview=preview
+        ))
+    return results
+    
 
 @router.post(
     "/clean",
