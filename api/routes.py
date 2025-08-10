@@ -20,6 +20,9 @@ redis_client = redis.from_url("redis://localhost", encoding="utf8", decode_respo
 
 # ========== Application & Middleware Setup ==========
 
+from fastapi import APIRouter, ...
+router = APIRouter()
+
 app = FastAPI(
     title="Comprehensive Data Platform API",
     description="RESTful API for data ingestion, cleaning, analysis, modeling, SQL export, and query execution.",
