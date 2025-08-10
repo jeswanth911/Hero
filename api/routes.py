@@ -17,7 +17,12 @@ import os
 
 from ingestion.ingestion_service import parse_files
 
+from fastapi import APIRouter, UploadFile, File, Query
+from fastapi.responses import JSONResponse
+from cleaning.cleaning_pipeline import run_cleaning
+import logging
 
+router = APIRouter()
     
 
 
@@ -147,33 +152,37 @@ async def ingest_file(files: List[UploadFile] = File(...), user: str = Depends(g
     return results
     
 
-@router.post(
-    "/clean",
-    response_model=IngestionResponse,
-    responses={400: {"model": ErrorResponse}},
-    dependencies=[Depends(RateLimiter(times=10, seconds=60))],
-)
-async def clean_data(
+@router.post("/api/clean")
+async def clean_dataset(
     file: UploadFile = File(...),
-    clean_req: CleanRequest = Depends(),
-    user: str = Depends(get_current_user),
+    drop_duplicates: bool = Query(False),
+    fillna: str = Query(None),
+    columns: str = Query(None)
 ):
-    """Simple cleaning wrapper — put heavy logic in cleaning_pipeline.py and call here or as background task."""
-    df = await parse_uploaded_file(file)
-    if clean_req.columns:
-        # validate columns exist
-        missing = [c for c in clean_req.columns if c not in df.columns]
-        if missing:
-            raise HTTPException(status_code=400, detail=f"Columns not found: {missing}")
-        df = df[clean_req.columns]
-    if clean_req.drop_duplicates:
-        df = df.drop_duplicates()
-    if clean_req.fillna is not None:
-        df = df.fillna(clean_req.fillna)
-    preview = df.head(10).to_dict(orient="records")
-    return IngestionResponse(message="Data cleaned successfully.", columns=list(df.columns), preview=preview)
+    try:
+        contents = await file.read()
+        with open(file.filename, "wb") as f:
+            f.write(contents)
 
+        cleaned_df = run_cleaning(
+            file_path=file.filename,
+            drop_duplicates=drop_duplicates,
+            fillna=fillna,
+            columns=columns.split(",") if columns else None
+        )
 
+        return {
+            "rows": len(cleaned_df),
+            "columns": list(cleaned_df.columns)
+        }
+
+    except Exception as e:
+        logging.exception("Error in /api/clean")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+        
+        
+        
+        
 @router.post(
     "/analyze",
     response_model=Dict[str, Any],
