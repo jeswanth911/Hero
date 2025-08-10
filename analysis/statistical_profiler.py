@@ -1,3 +1,11 @@
+# analysis/statistical_profiler.py
+
+import traceback
+
+from typing import List, Optional, Union
+
+logger = logging.getLogger(__name__)
+
 import pandas as pd
 import numpy as np
 import json
@@ -236,3 +244,52 @@ class StatisticalProfiler:
 # report = profiler.profile()
 # print(profiler.to_json())
 # profiler.visualize()
+
+
+
+
+def analyze_file(file_path: str,
+                 columns: Optional[Union[List[str], str]] = None,
+                 operations: Optional[Union[List[str], str]] = None) -> dict:
+    try:
+        df = pd.read_excel(file_path, engine="openpyxl") if file_path.lower().endswith((".xlsx", ".xls")) \
+             else pd.read_csv(file_path)
+
+        # Handle columns input
+        if isinstance(columns, str):
+            columns = [c.strip() for c in columns.split(",") if c.strip()]
+        if columns:
+            missing = set(columns) - set(df.columns)
+            if missing:
+                raise ValueError(f"Missing columns in dataset: {missing}")
+            df = df[columns]
+
+        results = {}
+
+        # Basic profiling
+        results["shape"] = {"rows": df.shape[0], "columns": df.shape[1]}
+        results["columns"] = list(df.columns)
+        results["dtypes"] = df.dtypes.astype(str).to_dict()
+        results["missing_values"] = df.isnull().sum().to_dict()
+        results["summary_stats"] = df.describe(include="all").fillna("").to_dict()
+
+        # Optional operations
+        if operations:
+            if isinstance(operations, str):
+                operations = [op.strip() for op in operations.split(",") if op.strip()]
+            if "correlation" in operations:
+                results["correlation_matrix"] = df.corr(numeric_only=True).to_dict()
+
+        return {"status": "success", "analysis": results}
+
+    except Exception as e:
+        logger.error(f"Error in statistical profiling: {e}")
+        logger.error(traceback.format_exc())
+        return {"status": "error", "message": str(e)}
+        
+
+
+
+
+
+
