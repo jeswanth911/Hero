@@ -1,7 +1,15 @@
+# ingestion/ingestion_service.py
+
 import os
 from typing import List, Dict, Any, Optional, Callable, Union
 import pandas as pd
 import logging
+from typing import List
+import pandas as pd
+from fastapi import UploadFile, HTTPException
+import io
+from .file_detector import detect_file_type
+from .parsers import parse_csv, parse_excel, parse_json, parse_xml, parse_pdf_table, parse_db_dump
 
 import file_detector  # Should provide detect_file_type(filepath) -> str
 import parsers        # Should provide parse_file(filepath, file_type) -> pd.DataFrame
@@ -175,3 +183,38 @@ if __name__ == "__main__":
             print(f"\nFile: {fname}\n{result.head()}\n")
         else:
             print(f"\nFile: {fname}\nError: {result['error']}\n")
+
+
+
+async def parse_files(files: List[UploadFile]) -> List[pd.DataFrame]:
+    """
+    Parse multiple uploaded files into Pandas DataFrames.
+    Supports CSV, Excel, JSON, XML, PDF tables, DB dumps.
+    """
+    results = []
+    for file in files:
+        try:
+            content = await file.read()
+            file_type = detect_file_type(file.filename)
+
+            if file_type == "csv":
+                df = parse_csv(io.BytesIO(content))
+            elif file_type == "excel":
+                df = parse_excel(io.BytesIO(content))
+            elif file_type == "json":
+                df = parse_json(io.BytesIO(content))
+            elif file_type == "xml":
+                df = parse_xml(io.BytesIO(content))
+            elif file_type == "pdf":
+                df = parse_pdf_table(io.BytesIO(content))
+            elif file_type == "db_dump":
+                df = parse_db_dump(io.BytesIO(content))
+            else:
+                raise ValueError(f"Unsupported file type: {file.filename}")
+
+            results.append((file.filename, df))
+
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Error parsing {file.filename}: {e}")
+    return results
+    
