@@ -14,7 +14,7 @@ Usage:
 """
 
 from typing import Any, Dict, Optional, Union
-from constants import ErrorCode
+from common.constants import ErrorCode
 
 class DataPipelineError(Exception):
     """
