@@ -7,7 +7,8 @@ import struct
 
 import pandas as pd
 
-from exceptions import UnsupportedFileTypeError, FileParsingError
+from common.exceptions import UnsupportedFileTypeError, FileParsingError
+
 from PyPDF2.errors import PdfReadError
 from PyPDF2 import PdfReader
 import pyarrow.parquet as pq
