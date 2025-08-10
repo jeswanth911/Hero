@@ -224,3 +224,9 @@ if __name__ == "__main__":
     file_type = sys.argv[2]
     df = parse_file(filepath, file_type)
     print(df.head())
+    
+
+def parse_db_dump(file_content):
+    """TODO: implement real DB dump parsing"""
+    raise NotImplementedError("DB dump parsing not yet implemented.")
+    
