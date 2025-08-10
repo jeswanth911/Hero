@@ -1,0 +1,34 @@
+# main.py
+from fastapi import FastAPI
+from api.routes import router as api_router
+from api.logging import setup_logging  # optional; create a simple function if not present
+
+def create_app() -> FastAPI:
+    app = FastAPI(
+        title="AMMA AI Analyst",
+        version="0.1.0",
+        description="AMMA: multi-file ingestion -> cleaning -> SQL -> NL queries"
+    )
+
+    # optional logging setup if you implemented api.logging
+    try:
+        setup_logging()
+    except Exception:
+        pass
+
+    # include API router
+    app.include_router(api_router, prefix="/api")
+
+    # simple root /health
+    @app.get("/health")
+    async def health():
+        return {"status": "ok"}
+
+    return app
+
+app = create_app()
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+  
