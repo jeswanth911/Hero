@@ -22,6 +22,15 @@ from fastapi.responses import JSONResponse
 from cleaning.cleaning_pipeline import run_cleaning
 import logging
 
+# api/routes.py
+
+from fastapi import APIRouter, UploadFile, File, Form
+import tempfile
+from analysis import statistical_profiler
+
+
+
+
 router = APIRouter()
     
 
@@ -183,22 +192,23 @@ async def clean_dataset(
         
         
         
-@router.post(
-    "/analyze",
-    response_model=Dict[str, Any],
-    responses={400: {"model": ErrorResponse}},
-    dependencies=[Depends(RateLimiter(times=10, seconds=60))],
-)
-async def analyze_data(file: UploadFile = File(...), analysis_req: AnalysisRequest = Depends(), user: str = Depends(get_current_user)):
-    """Profiling and simple analysis. Production: call analysis/statistical_profiler.py"""
-    df = await parse_uploaded_file(file)
-    ops = analysis_req.operations
-    results: Dict[str, Any] = {}
-    if "describe" in ops:
-        results["describe"] = df.describe(include="all").to_dict()
-    if "correlation" in ops and df.select_dtypes(include=["number"]).shape[1] > 1:
-        results["correlation"] = df.corr().to_dict()
-    return results
+@router.post("/analyze")
+async def analyze(file: UploadFile = File(...),
+                  columns: str = Form(""),
+                  operations: str = Form("")):
+    try:
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp.write(await file.read())
+            tmp_path = tmp.name
+
+        return statistical_profiler.analyze_file(tmp_path, columns, operations)
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"status": "error", "message": str(e)}
+        
+        
 
 
 @router.post(
@@ -268,4 +278,9 @@ async def sql_query(query_req: QueryRequest, page: int = Query(1, ge=1), size: i
     end = start + size
     items = df.iloc[start:end].to_dict(orient="records")
     return PaginatedResponse(items=items, total=total, page=page, size=size)
+
+
+
+
+
 
