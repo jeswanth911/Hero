@@ -11,6 +11,8 @@ uvicorn
 pandas
 openpyxl
 PyPDF2
+
+lxml
 # plus all your other deps...
 
 prophet==1.1.5
