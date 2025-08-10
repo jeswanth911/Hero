@@ -1,6 +1,8 @@
 # main.py
 from fastapi import FastAPI
-from api.routes import router as api_router
+from api import routes as api_router
+app = api_router.app
+
 from api.logging import setup_logging  # optional; create a simple function if not present
 
 def create_app() -> FastAPI:
