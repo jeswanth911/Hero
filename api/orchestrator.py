@@ -208,3 +208,32 @@ def alert_on_failure(job_id: str, message: str):
 # )
 
 # In API, expose /status/{job_id} and /cancel/{job_id} endpoints to call get_status/cancel_job.
+
+
+
+# api/routes.py
+from fastapi import APIRouter, UploadFile, File, Form
+from typing import Optional
+from ingestion.ingestion_service import ingest_file  # implement this
+from query_engine.nl_to_sql import query_data       # implement this
+
+router = APIRouter(tags=["amma"])
+
+@router.post("/ingest")
+async def ingest_endpoint(file: UploadFile = File(...), dataset_name: Optional[str] = Form(None)):
+    """
+    Accepts a single uploaded file and returns dataset_id (or error).
+    """
+    # Read bytes and pass to ingestion service
+    content = await file.read()
+    result = await ingest_file(content, filename=file.filename, dataset_name=dataset_name)
+    return result
+
+@router.post("/query")
+async def query_endpoint(question: str = Form(...), dataset_id: str = Form(...)):
+    """
+    Accepts NL question + dataset_id, returns answer.
+    """
+    answer = await query_data(question, dataset_id)
+    return answer
+    
