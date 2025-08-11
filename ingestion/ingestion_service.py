@@ -218,3 +218,11 @@ async def parse_files(files: List[UploadFile]) -> List[pd.DataFrame]:
             raise HTTPException(status_code=400, detail=f"Error parsing {file.filename}: {e}")
     return results
     
+# ingestion/ingestion_service.py
+from .file_detector import detect_file_type  # Adjust if needed
+
+def parse_files(filepath):
+    file_type = detect_file_type(filepath)
+    # Additional processing code...
+
+# Your other functions and logic...
